@@ -1,3 +1,25 @@
+/*
+Analysis:
+
+1)Females survived more as compared to males by 56 %. Therefore females have better survival rate.
+
+2)It shows that Higher class have higher survival rate as compared to lower classes.
+
+3)People from class3 have died the most anad people from class 1 have survived the most.
+
+4) On an average people who had an embarkment C have paid more than S and people from S paid more than Q (C>S>Q).
+
+5)The rate of survival is more if there embarkment is C then S then Q.
+
+6) People who have paid more have higher survival chance.
+
+7) The algorithm used is Logistic Regression for classifying if the person has Survived or not.
+
+8) The Accuracy is 94%.
+
+
+
+
 #importing libraries
 
 import numpy as np
