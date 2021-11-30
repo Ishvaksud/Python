@@ -1,0 +1,207 @@
+#importing libraries
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as  plt
+import seaborn as sns
+import random
+
+data=pd.read_csv("train.csv")
+
+data.head()
+
+data.describe()
+
+data.info()
+
+data.drop(["PassengerId","Name"],axis=1,inplace=True)
+
+sns.countplot(data["Survived"])
+plt.show()
+
+data["Survived"].value_counts()
+data.isnull().sum()
+
+data["Cabin"]=data["Cabin"].astype(str)
+
+list1=[]
+def remove(df,column):
+  for i in df[column]:
+      list1.append(i[0])
+      
+remove(data,"Cabin")
+data["Cabin"]=pd.DataFrame(list1)
+data["Cabin_na"]=np.where(data["Cabin"]=="n",1,0)
+
+data["Cabin"].value_counts()
+
+x=data["Cabin"].value_counts().index[1:]
+def change(variable):
+  y=random.choice(x)
+  if variable=="n":
+    return y
+  else:
+   return variable
+
+data["Cabin"].value_counts()
+
+data["Cabin"]=data["Cabin"].apply(change)
+random.seed(44)
+
+data["Cabin"].value_counts()[0:].sum()
+data["Embarked"].unique()
+
+print(data["Embarked"].value_counts()),
+sns.countplot(data["Embarked"])
+
+data["Embarked"].fillna("S",inplace=True)
+sns.displot(data["Age"],kde=True)
+data["Age"].median()
+
+sns.displot(data["Age"].fillna(28.0),kde=True)
+
+data["Age_na"]=np.where(data["Age"].isna(),1,0)
+data["Age"].fillna(data["Age"].median(),inplace=True)
+
+data.groupby(["Survived","Sex"])["Survived"].count( )
+data.groupby(data["Sex"])["Survived"].mean()
+
+sns.countplot(data["Sex"],hue=data["Survived"])
+
+data["Pclass"].value_counts()
+data.groupby("Pclass")["Survived"].mean()
+
+sns.countplot(data["Pclass"],hue=data["Survived"])
+
+data.groupby(data["Pclass"])["Fare"].mean()
+sns.displot(data["Fare"],kde=True,bins=30)
+
+data.groupby("Pclass").agg(["min","max"])["Fare"]
+sns.countplot(data["Pclass"],hue=data["Survived"])
+
+1-data.groupby("Pclass")["Survived"].mean()
+data.groupby(["Survived","Pclass","Sex"])["Sex"].count()
+
+data["SibSp"].value_counts()
+data.groupby(["Survived","SibSp"])["SibSp"].count()
+
+plt.figure(figsize=(10,5))
+sns.countplot(data["SibSp"],hue=data["Survived"])
+
+data.drop("Ticket",axis=1,inplace=True)
+data.groupby(["Survived","Parch"])["Parch"].count()
+
+plt.figure(figsize=(10,5))
+sns.countplot(data["Parch"],hue=data["Survived"])
+plt.legend(loc="upper right")
+
+print(data["Cabin"].unique())
+print(data["Cabin"].value_counts())
+sns.countplot(data["Cabin"])
+
+data.groupby(data["Embarked"])["Fare"].mean().sort_values()
+sns.barplot(x=data["Embarked"],y=data["Fare"])
+
+data.groupby(["Survived","Embarked"])["Fare"].mean()
+
+data.groupby(["Embarked"])["Fare"].agg(["min","max"])
+
+data.groupby(["Survived"])["Fare"].mean()
+sns.barplot(x=data["Survived"],y=data["Fare"],hue=data["Pclass"]);
+data.groupby(["Embarked","Pclass"])["Pclass"].count()
+
+data.groupby(["Cabin","Pclass"])["Survived"].count()
+
+
+def change(sex):
+  if sex=="female":
+    return 1
+  else:
+    return 0
+data["Sex_female"]=data["Sex"].apply(change)
+data.drop("Sex",inplace=True,axis=1)
+
+data.groupby(["Cabin","Survived"])["Survived"].count()
+x=data.groupby("Cabin")["Survived"].mean().sort_values().reset_index()
+x=dict(zip(x.Cabin,x.Survived))
+
+data["Cabin"]=data["Cabin"].map(x)
+r=pd.get_dummies(data["Embarked"],drop_first=True)
+
+data=pd.concat([data,r],axis=1)
+data.drop("Embarked",axis=1,inplace=True)
+
+test=pd.read_csv("test.csv")
+print(data.columns)
+test.drop(["PassengerId","Name","Ticket"],axis=1,inplace=True)
+
+from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+
+test["Sex_female"]=test["Sex"].apply(change)
+test.drop("Sex",axis=1,inplace=True)
+
+enc=pd.get_dummies(test["Embarked"],drop_first=True)
+enc
+test=pd.concat([test,enc],axis=1)
+
+test.drop("Embarked",axis=1,inplace=True)
+test["Fare"].fillna(data.Fare.mean(),inplace=True)
+
+test["Age_na"]=np.where(test["Age"].isnull(),1,0)
+
+test["Age"].fillna(data.Age.median(),inplace=True)
+
+list2=[]
+def remove1(df,column):
+  for i in df[column]:
+      list2.append(i[0])
+
+test["Cabin"]=test["Cabin"].astype(str)
+
+remove1(test,"Cabin")
+test["Cabin"]=pd.DataFrame(list1)
+test["Cabin_na"]=np.where(test["Cabin"]=="n",1,0)
+s=test["Cabin"].value_counts().index[1:]
+
+def change(variable):
+  y=random.choice(s)
+  if variable=="n":
+    return y
+  else:
+   return variable
+
+test["Cabin"]=test["Cabin"].apply(change)
+random.seed(404)
+
+X=data.drop("Survived",axis=1)
+y=data["Survived"]
+
+test["Cabin"]=test["Cabin"].map(x)
+test=test[['Pclass', 'Age', 'SibSp', 'Parch', 'Fare', 'Cabin', 'Cabin_na','Age_na', 'Sex_female', 'Q', 'S']]
+
+scalar=StandardScaler()
+scaled_train=scalar.fit_transform(X)
+scaled_test=scalar.transform(test)
+
+model=LogisticRegression()
+model.fit(scaled_train,y)
+
+predict=model.predict(scaled_test)
+y_test=pd.read_csv("gender_submission.csv")
+
+from sklearn.metrics import confusion_matrix,plot_confusion_matrix,classification_report,accuracy_score
+y_test.drop("PassengerId",axis=1,inplace=True)
+
+confusion=confusion_matrix(y_test,predict)
+
+print(classification_report(y_test,predict))
+model.predict_proba(scaled_test)
+
+sns.heatmap(confusion,annot=True,fmt="g")
+
+accuracy_score(predict,y_test)
+       
+       
+
