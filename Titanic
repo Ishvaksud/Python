@@ -153,6 +153,7 @@ test["Age_na"]=np.where(test["Age"].isnull(),1,0)
 
 test["Age"].fillna(data.Age.median(),inplace=True)
 
+
 list2=[]
 def remove1(df,column):
   for i in df[column]:
