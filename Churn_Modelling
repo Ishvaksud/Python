@@ -1,0 +1,95 @@
+#importing libraries	
+	
+	import numpy as np
+	import pandas as pd
+	import matplotlib.pyplot as plt
+	import seaborn as sns
+	
+	#importing the dataset
+	df=pd.read_csv("/Users/ishvaksud/Downloads/Churn_Modelling.csv")
+	
+	#Data analysis and Data preprocessing
+	df.info()
+	
+	df.isna().sum()
+	
+	df.head(10)
+	
+	df=df.drop(["CustomerId","RowNumber","Surname"],axis=1)
+	df
+	
+	#integer coding
+	
+	def change(sex):
+	if sex=="Male":
+	return 1
+	else:
+	return 0
+	df["Male"]=df["Gender"].apply(change)
+	
+	def change(sex):
+	if sex=="Female":
+	return 1
+	else:
+	return 0
+	df["Female"]=df["Gender"].apply(change)
+	
+	df
+	df=df.drop("Gender",axis=1)
+	
+	df["Geography"].unique()
+	geography=pd.get_dummies(df["Geography"],drop_first=True)
+	
+	df=pd.concat([df,geography],axis=1)
+	df=df.drop("Geography",axis=1)
+	
+	# Splitting the data
+	
+	from sklearn.model_selection import train_test_split
+	X=df.drop("Exited",axis=1)
+	y=df["Exited"]
+	
+	X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.30, random_state=42)
+	
+	#Data visualization
+	
+	sns.kdeplot(df["CreditScore"])
+	
+	sns.kdeplot(df["Balance"])
+	
+	sns.kdeplot(df["EstimatedSalary"])
+	
+	#Min-Max normalization
+	
+	from sklearn.preprocessing import MinMaxScaler
+	
+	nz=MinMaxScaler()
+	X_train=nz.fit_transform(X_train)
+	X_test=nz.transform(X_test)
+	
+	#importing keras(Neural network library)
+	
+	import keras
+	from keras.models import Sequential
+	from keras.layers import Dense
+	from keras.layers import ReLU,LeakyReLU,ELU
+	from keras.layers import Dropout
+	
+	ann=Sequential()
+	ann.add(Dense(units=6,activation="relu",kernel_initializer="he_uniform",input_dim=12))
+	ann.add(Dense(units=6,activation="relu",kernel_initializer="he_uniform"))
+	ann.add(Dense(units=1,activation="sigmoid",kernel_initializer="glorot_uniform"))
+	ann.compile(optimizer="Adamax",loss="binary_crossentropy",metrics=["accuracy"])
+	model=ann.fit(X_train,y_train,validation_split=0.33,batch_size=10,epochs=100)
+	
+	X_train.shape
+	pred=ann.predict(X_test)
+	pred=(pred>0.5)
+	
+	#Checking the model's accuracy
+	from sklearn.metrics import confusion_matrix
+	from sklearn.metrics import accuracy_score
+	
+	confusion_matrix(pred,y_test)
+	
+	accuracy_score(pred,y_test)
