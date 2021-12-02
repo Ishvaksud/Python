@@ -1,3 +1,3 @@
 # Python
 
-Performing EDA and performing Machine learning on datasets using Python programming language.
+Performing EDA an Machine learning on datasets using Python programming language.
