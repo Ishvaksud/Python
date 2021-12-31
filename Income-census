@@ -1,0 +1,321 @@
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# EDA (Exploratory data analysis)
+
+1) It is an imbalanced dataset where “ <=50k” occupies around 75.9% and “ >50k” occupies roughly 24.08%.
+
+2) Males are more in the dataset and the majority of males are more in both the income classes .
+
+3) The white’s have the majority among races with a percentage of 86%.
+
+4) Whites are the most number of people within both the predicQon classes.
+
+5) Most of the people are from USA with the percentage of 89%. Therefore the data is of USA.
+
+6) Most of the people are husbands which is around 40%.
+
+7) Not in family are the most number of people with income “<=50k’ and Husbands are the most with income “>50k”.
+
+8) Most of the unmarried are females and those who have their own child are males.
+
+9) Most of the people have Marital-status as Married civilian spouse which occupies 45%
+
+10) Crad-Repair has the most number of males as occupaQon and most females are in administraQon-Clerical.
+
+11) AdministraQon-clerical are the people who have the most income less than “<=50k” and ExecuQve -managerial are the most with income “ >50k”.
+
+12) Most of the people are high school graduates which accounts for 32%.
+
+13) Most of the people belong from private sector.
+
+14) Most of the high school graduates have crad-repair as there occupation.
+
+15) Most of the people in Private sector have crad repair as an occupaQon. Therefore Crad Repair is a private sector work class.
+
+16) Most of the males and females are from private sector.
+
+17) Average age is 38.5
+
+18) Average years of educaQon is 9 years.
+
+19) People who have 9 years of educaQon earn the most in the category of “ >50k”. 20) Mean values for hours per week is 40 hours.
+
+20) Applied random forest and got the accuaracy as 82%.
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Code:
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt 
+import seaborn as sns
+import random
+
+data=pd.read_csv("/Users/ishvaksud/Desktop/Datasets/adult.data.csv")
+
+columns=["age","workclass","final_weight","education","education-num",
+         "marital-status","occupation","relationship","race","sex",
+         "capital-gain","capital-loss","hours-per-week","native-country",
+         "Income"]
+
+data.columns=columns
+
+print(data.columns)
+print(data.head(10))    
+print(data.info())
+
+print(data["Income"].unique())
+
+#---EDA---
+
+#---Income---
+print(data["Income"].value_counts())
+print("<=50->",(data["Income"].value_counts()[0]*100)/data.shape[0])
+print(">50->",100-((data["Income"].value_counts()[0]*100)/data.shape[0]))
+
+sns.countplot(data["Income"])
+
+print(data.isnull().sum())
+
+#---Sex---
+data["sex"].value_counts()
+sns.countplot(x=data["Income"],hue=data["sex"])
+data.groupby(["Income"])["sex"].value_counts()
+
+
+#---Race---
+data["race"].value_counts()/data.shape[0]
+plot=sns.countplot(data["race"],hue=data["Income"])
+plt.setp(plot.get_xticklabels(), rotation=45)
+
+plot=sns.countplot(data["race"],hue=data["sex"])
+plt.setp(plot.get_xticklabels(), rotation=45)
+
+#---Native country---
+data["native-country"].value_counts()/data.shape[0]
+x=data.groupby(["native-country","Income"])["Income"].aggregate(count="count").reset_index()
+x[x["Income"]==" <=50K"].sort_values(by=["count"],ascending=False)
+x[x["Income"]==" >50K"].sort_values(by=["count"],ascending=False)
+
+#---Relationship---
+data["relationship"].value_counts()/data.shape[0]
+data.groupby(["relationship","Income"])["Income"].count()
+sns.countplot(data["relationship"],hue=data["race"])
+ 
+#---Marital status---
+data["marital-status"].value_counts()/data.shape[0]
+plot=sns.countplot(data["marital-status"],hue=data["relationship"])
+plt.setp(plot.get_xticklabels(), rotation=45)
+
+#---occupation---
+data["occupation"].value_counts()
+plot=sns.countplot(y=data["occupation"],hue=data["sex"])
+y=data.groupby(["occupation","Income"])["Income"].aggregate(count="count").reset_index()
+y[y["Income"]==" <=50K"].sort_values(by=["count"],ascending=False)
+y[y["Income"]==" >50K"].sort_values(by=["count"],ascending=False)
+
+
+#---Education---
+data["education"].value_counts()/data.shape[0]
+y=data.groupby(["education","occupation"])["occupation"].aggregate(count="count")
+.reset_index()
+plt.figure(figsize=(25,50))
+sns.countplot(data["education"],hue=data["occupation"])
+
+#---Workclass---
+data["workclass"].value_counts()
+y=data.groupby(["workclass","occupation"])["occupation"].aggregate(count="count")
+.reset_index()
+sns.countplot(data["sex"],hue=data["workclass"])
+
+#---Age---
+data.describe()["age"]
+sns.distplot(data["age"])
+#---education-number---
+data["education-num"].value_counts()
+data.groupby(["education-num","Income"])["Income"].aggregate(count="count")
+.sort_values(by=["count"])
+  
+#Hours-per-week
+data.describe()["hours-per-week"]
+sns.distplot(data["hours-per-week"])
+
+sns.scatterplot(data["age"],data["hours-per-week"])
+sns.scatterplot(data["education-num"],data["hours-per-week"])
+sns.scatterplot(data["age"],data["education-num"])
+
+#---Data preprocessing---
+
+data["native-country"].value_counts()
+
+def country(value):
+    if value==" United-States":
+        return value
+    else:
+        return " Others"
+    
+data["native-country"]=data["native-country"].apply(country)
+
+data["usa"]=np.where(data["native-country"]==" United-States",1,0)
+data.drop("native-country",axis=1,inplace=True)
+    
+data.drop("final_weight",axis=1,inplace=True)
+
+data["Income"]=np.where(data["Income"]==" >50K",1,0)
+
+def capital(value):
+    if value>0:
+        return 1
+    else:
+        return 0
+        
+    
+data["capital-gain"]=data["capital-gain"].apply(capital)  
+    
+data["capital-loss"]=data["capital-loss"].apply(capital)  
+
+data["male"]=np.where(data["sex"]==" Male",1,0)
+data.drop("sex",axis=1,inplace=True)
+            
+def race(value):
+    if (value==" Asian-Pac-Islander") or (value== " Amer-Indian-Eskimo"):
+        return " Other"
+    else:
+        return value
+    
+data["race"]=data["race"].apply(race)  
+
+data["white"]=np.where(data["race"]==" White",1,0)
+data["black"]=np.where(data["race"]==" Black",1,0)
+        
+data.drop("race",axis=1,inplace=True)
+   
+list1=list(data["occupation"].unique())
+list1.remove(" ?")
+
+def randomch(value):
+    choice=random.choice(list1)
+    if value==" ?":
+        return choice
+    else:
+        return value
+    
+data["occupation"]=data["occupation"].apply(randomch)
+
+list2=list(data["workclass"].unique())
+list2.remove(" ?")
+
+def randwork(value):
+    choice=random.choice(list2)
+    if value==" ?":
+        return choice
+    else:
+        return value
+    
+data["workclass"]=data["workclass"].apply(randwork)
+
+def edu(value):
+    if value in [" 11th"," 9th"," 7th-8th"," 5th-6th"," 10th"," 1st-4th"," 12th"]:
+        return " In-school"
+    else:
+        return value
+
+data["education"]=data["education"].apply(edu)
+
+map1=data.groupby(["workclass"])["Income"].mean().reset_index()
+map1=dict(zip(map1["workclass"],map1["Income"]))
+
+data["workclass"]=data["workclass"].map(map1)
+
+map2=data.groupby("marital-status")["Income"].mean().reset_index()
+map2=dict(zip(map2["marital-status"],map2["Income"]))
+
+data["marital-status"]=data["marital-status"].map(map2)
+
+map3=data.groupby("relationship")["Income"].mean().reset_index()
+map3=dict(zip(map3["relationship"],map3["Income"]))
+
+data["relationship"]=data["relationship"].map(map3)
+
+map4=data.groupby("occupation")["Income"].mean().reset_index()
+map4=dict(zip(map4["occupation"],map4["Income"]))
+
+
+data["occupation"]=data["occupation"].map(map4)
+
+map5=data.groupby("education")["Income"].mean().reset_index()
+map5=dict(zip(map5["education"],map5["Income"]))
+
+data["education"]=data["education"].map(map5)
+
+X=data.drop("Income",axis=1)
+y=data["Income"]
+
+#Handling Imbalanced dataset        
+from imblearn.over_sampling import SMOTE 
+
+sm=SMOTE(sampling_strategy=1.0,random_state=23)
+X_train,y_train=sm.fit_resample(X, y)   
+
+y_train.value_counts()
+
+test=pd.read_csv("/Users/ishvaksud/Downloads/adult.test.csv").reset_index()
+
+test.columns=columns
+
+test.drop("final_weight",axis=1,inplace=True)
+
+test["capital-gain"]=test["capital-gain"].apply(capital)  
+
+test["capital-loss"]=test["capital-loss"].apply(capital)  
+
+test["race"]=test["race"].apply(race)
+
+test["white"]=np.where(test["race"]==" White",1,0)
+test["black"]=np.where(test["race"]==" Black",1,0)
+test.drop("race",axis=1,inplace=True)
+
+test["male"]=np.where(test["sex"]==" Male",1,0)
+test.drop("sex",axis=1,inplace=True)
+
+test["Income"]=np.where(test["Income"]==" >50K.",1,0)
+
+test["occupation"]=test["occupation"].apply(randomch)  
+
+test["workclass"]=test["workclass"].apply(randwork)
+
+test["native-country"]=test["native-country"].apply(country)
+
+test["workclass"]=test["workclass"].map(map1)
+test["marital-status"]=test["marital-status"].map(map2)
+test["relationship"]=test["relationship"].map(map3)
+test["occupation"]=test["occupation"].map(map4)
+
+test["education"]=test["education"].apply(edu)
+
+test["education"]=test["education"].map(map5)
+
+test["usa"]=np.where(test["native-country"]==" United-States",1,0)
+test.drop("native-country",axis=1,inplace=True)
+
+X_test=test.drop("Income",axis=1)
+y_test=test["Income"]
+
+
+from sklearn.ensemble import RandomForestClassifier
+
+model=RandomForestClassifier()
+model.fit(X_train,y_train)
+
+pred=model.predict(X_test)
+
+from sklearn.metrics import confusion_matrix,accuracy_score,classification_report
+
+conf=confusion_matrix(pred,y_test)
+accuracy_score(y_test,pred)
+
+sns.heatmap(conf,annot=True,fmt="g")
+
+print(classification_report(y_test,pred))
+
